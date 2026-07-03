@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>neura_microsoft_sharepoint_sync</id>
+    <namespace>NeuraMicrosoftSharepointSync</namespace>
+    <name>Microsoft SharePoint File Sync</name>
+    <summary>Download SharePoint / OneDrive folders recursively into a Nextcloud Group Folder</summary>
+    <description><![CDATA[Import files from a Microsoft SharePoint or OneDrive folder into Nextcloud, recursively, preserving the folder hierarchy.
+
+Authenticate once with a single Microsoft account (Delegated OAuth) that already has access to the shared folders — no changes required on the client tenant. Point the app at a SharePoint folder URL, choose a destination Group Folder, and download everything below that folder with a single click from the admin panel.
+
+**Features**
+- Delegated OAuth2 (authorization code flow) with a single service account, refresh token stored encrypted
+- Recursive download of a SharePoint / OneDrive folder and all its sub-folders
+- Destination inside a Nextcloud Group Folder (team folder), with the SharePoint path replicated idempotently (existing folders are reused, never duplicated)
+- Change detection by size and modification date to skip unchanged files on re-runs
+- Manual "Download now" trigger from the admin panel with a live progress report
+- Uses Nextcloud's built-in HTTP client — no external Composer dependencies
+
+Developed by [IANUSTEC](https://ianustec.com) as part of our open-source initiative to help companies migrate from Google and Microsoft to self-hosted infrastructure.]]></description>
+    <version>1.0.0</version>
+    <licence>AGPL-3.0-or-later</licence>
+    <author mail="opensource@ianustec.com" homepage="https://ianustec.com">IANUSTEC</author>
+    <documentation>
+        <admin>https://github.com/ianustec/nextcloud-microsoft-sharepoint-sync#readme</admin>
+        <developer>https://github.com/ianustec/nextcloud-microsoft-sharepoint-sync#how-it-works</developer>
+    </documentation>
+    <category>integration</category>
+    <category>files</category>
+    <website>https://ianustec.com</website>
+    <bugs>https://github.com/ianustec/nextcloud-microsoft-sharepoint-sync/issues</bugs>
+    <repository>https://github.com/ianustec/nextcloud-microsoft-sharepoint-sync</repository>
+    <dependencies>
+        <php min-version="8.1"/>
+        <lib>curl</lib>
+        <lib>json</lib>
+        <nextcloud min-version="27" max-version="32"/>
+    </dependencies>
+    <settings>
+        <admin-section>OCA\NeuraMicrosoftSharepointSync\Settings\AdminSection</admin-section>
+        <admin>OCA\NeuraMicrosoftSharepointSync\Settings\AdminSettings</admin>
+    </settings>
+</info>

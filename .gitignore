@@ -1,0 +1,6 @@
+/vendor/
+/.certs/
+composer.phar
+.DS_Store
+*.tar
+*.tar.gz

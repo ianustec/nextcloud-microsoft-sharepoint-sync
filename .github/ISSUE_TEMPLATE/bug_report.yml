@@ -1,0 +1,88 @@
+name: Bug report
+description: Something is not working as expected
+labels: [ "bug" ]
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Before opening a bug report**, please search existing issues to avoid duplicates.
+      Do **not** include credentials, tokens, or personal/client data.
+
+- type: input
+  id: nextcloud_version
+  attributes:
+    label: Nextcloud version
+    placeholder: "e.g. 29.0.4"
+  validations:
+    required: true
+
+- type: input
+  id: php_version
+  attributes:
+    label: PHP version
+    placeholder: "e.g. 8.2.18"
+  validations:
+    required: true
+
+- type: input
+  id: plugin_version
+  attributes:
+    label: Plugin version
+    placeholder: "e.g. 1.0.0"
+  validations:
+    required: true
+
+- type: dropdown
+  id: deployment
+  attributes:
+    label: Deployment type
+    options:
+    - Kubernetes
+    - Docker / Docker Compose
+    - Bare metal
+    - Other
+  validations:
+    required: true
+
+- type: textarea
+  id: description
+  attributes:
+    label: Describe the bug
+    description: A clear and concise description of what the bug is.
+  validations:
+    required: true
+
+- type: textarea
+  id: steps
+  attributes:
+    label: Steps to reproduce
+    placeholder: |
+      1. Go to Administration settings → Microsoft SharePoint File Sync
+      2. Click "Download now"
+      3. …
+  validations:
+    required: true
+
+- type: textarea
+  id: expected
+  attributes:
+    label: Expected behaviour
+  validations:
+    required: true
+
+- type: textarea
+  id: actual
+  attributes:
+    label: Actual behaviour (include error messages)
+    description: |
+      Paste the exact error from the admin page **and** relevant lines from
+      `nextcloud.log` (or `occ log:watch`).
+      Remove any credentials, tokens, URLs containing auth params, or personal data.
+  validations:
+    required: true
+
+- type: textarea
+  id: additional
+  attributes:
+    label: Additional context
+    description: Screenshots, network traces, etc. (sanitised).

@@ -1,0 +1,26 @@
+{
+    "name": "ianustec/nextcloud-microsoft-sharepoint-sync",
+    "description": "Recursively download SharePoint / OneDrive folders into a Nextcloud Group Folder via Microsoft Graph delegated OAuth",
+    "type": "project",
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "IANUSTEC",
+            "email": "opensource@ianustec.com",
+            "homepage": "https://ianustec.com"
+        }
+    ],
+    "homepage": "https://github.com/ianustec/nextcloud-microsoft-sharepoint-sync",
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "OCA\\NeuraMicrosoftSharepointSync\\": "lib/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}
