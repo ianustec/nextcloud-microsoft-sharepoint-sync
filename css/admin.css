@@ -274,8 +274,42 @@ select.sps-input { max-width: 640px; }
     padding: 0.5rem 0.75rem 0.5rem 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.35rem;
     font-size: 0.8rem;
     color: #991b1b;
     word-break: break-word;
+}
+.sps-err-list li { list-style: disc; }
+.sps-err-name { font-weight: 600; display: block; }
+.sps-err-reason {
+    display: block;
+    color: #7f1d1d;
+    margin-left: 0.5rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    word-break: break-all;
+}
+
+/* Retry row */
+.sps-retry-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.sps-retry-btn {
+    background: #b45309 !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 0.45rem 1rem !important;
+    border-radius: var(--border-radius, 4px) !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    white-space: nowrap;
+}
+.sps-retry-btn:hover { filter: brightness(1.1); }
+.sps-retry-hint {
+    font-size: 0.78rem;
+    color: var(--color-text-maxcontrast);
 }

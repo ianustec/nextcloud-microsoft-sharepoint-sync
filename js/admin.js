@@ -126,28 +126,22 @@
         });
     }
 
-    syncBtn.addEventListener('click', async function () {
-        if (!confirm('Start downloading from SharePoint now? Large folders can take a while.')) return;
+    let lastRunPayload = null;
+
+    async function runSync(payload) {
         setBtnBusy(syncBtn, 'Downloading…');
         statusDiv.className = 'sps-status-msg sps-status-msg--info';
         statusDiv.style.display = 'block';
         statusDiv.innerHTML = '<span class="sps-spinner"></span> Downloading… keep this tab open.';
-        const runPayload = {
-            sourceUrl: document.getElementById('sps-source-url').value.trim(),
-            destGroupFolderId: parseInt(document.getElementById('sps-groupfolder').value, 10) || 0,
-            destSubPath: document.getElementById('sps-subpath').value.trim(),
-            runAsUser: document.getElementById('sps-runas').value.trim(),
-            replicateFullPath: document.getElementById('sps-replicate').checked ? 'yes' : 'no',
-        };
         try {
             const resp = await fetch(APP_URL + '/api/admin/sync-now', {
                 method: 'POST',
                 headers: { requesttoken: OC.requestToken, 'Content-Type': 'application/json' },
-                body: JSON.stringify(runPayload),
+                body: JSON.stringify(payload),
             });
             const json = await resp.json();
             if (json.status === 'ok') {
-                renderReport(json);
+                renderReport(json, payload);
             } else if (json.status === 'skipped') {
                 showStatus('Skipped: ' + (json.message || ''), 'info');
             } else {
@@ -158,10 +152,23 @@
         } finally {
             resetBtn(syncBtn);
         }
+    }
+
+    syncBtn.addEventListener('click', async function () {
+        if (!confirm('Start downloading from SharePoint now? Large folders can take a while.')) return;
+        lastRunPayload = {
+            sourceUrl: document.getElementById('sps-source-url').value.trim(),
+            destGroupFolderId: parseInt(document.getElementById('sps-groupfolder').value, 10) || 0,
+            destSubPath: document.getElementById('sps-subpath').value.trim(),
+            runAsUser: document.getElementById('sps-runas').value.trim(),
+            replicateFullPath: document.getElementById('sps-replicate').checked ? 'yes' : 'no',
+        };
+        await runSync(lastRunPayload);
     });
 
-    function renderReport(json) {
-        const hasErrors = (json.failed || 0) > 0;
+    function renderReport(json, payload) {
+        const failedCount = json.failed || 0;
+        const hasErrors = failedCount > 0;
         statusDiv.className = 'sps-result-wrap';
         statusDiv.style.display = 'block';
 
@@ -169,22 +176,46 @@
             + pill('Downloaded', json.downloaded || 0, 'ok')
             + pill('Skipped', json.skipped || 0, 'neutral')
             + pill('Folders', json.folders || 0, 'ok')
-            + pill('Failed', json.failed || 0, hasErrors ? 'error' : 'ok')
+            + pill('Failed', failedCount, hasErrors ? 'error' : 'ok')
             + '</div>';
 
         if (json.root) {
             html += '<p class="sps-hint">Destination sub-tree: <code>' + escHtml(json.root) + '</code></p>';
         }
 
-        if (hasErrors && json.errors && json.errors.length) {
-            html += '<details class="sps-detail sps-detail--error" open><summary>✗ Errors (' + json.errors.length + ')</summary><ul class="sps-err-list">';
-            json.errors.forEach(function (e) {
-                html += '<li>' + escHtml(e) + '</li>';
-            });
-            html += '</ul></details>';
+        if (hasErrors) {
+            html += '<div class="sps-retry-row">'
+                + '<button id="sps-retry-btn" class="button sps-retry-btn">&#x21BA; Retry failed (' + failedCount + ')</button>'
+                + '<span class="sps-retry-hint">Already-successful files are skipped automatically.</span>'
+                + '</div>';
+
+            if (json.errors && json.errors.length) {
+                html += '<details class="sps-detail sps-detail--error" open><summary>&#x2717; Failed files (' + json.errors.length + ')</summary><ul class="sps-err-list">';
+                json.errors.forEach(function (e) {
+                    // Split "File "name": reason" for better formatting
+                    const match = e.match(/^((?:File|Folder) "(?:[^"]+)"): (.+)$/s);
+                    if (match) {
+                        html += '<li><span class="sps-err-name">' + escHtml(match[1]) + '</span>'
+                            + '<span class="sps-err-reason">' + escHtml(match[2]) + '</span></li>';
+                    } else {
+                        html += '<li>' + escHtml(e) + '</li>';
+                    }
+                });
+                html += '</ul></details>';
+            }
         }
 
         statusDiv.innerHTML = html;
+
+        if (hasErrors) {
+            const retryBtn = document.getElementById('sps-retry-btn');
+            if (retryBtn && payload) {
+                retryBtn.addEventListener('click', async function () {
+                    if (!confirm('Retry ' + failedCount + ' failed item(s)? Already-downloaded files will be skipped.')) return;
+                    await runSync(payload);
+                });
+            }
+        }
     }
 
     function pill(label, value, type) {

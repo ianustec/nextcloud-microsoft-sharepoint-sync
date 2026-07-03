@@ -233,7 +233,14 @@ class MsGraphService {
 
     /**
      * Downloads a drive item's content to a temporary file and returns its path.
-     * Prefers the pre-authenticated download URL from the item metadata.
+     *
+     * Strategy:
+     *   1. Try the pre-signed "@microsoft.graph.downloadUrl" embedded in the item
+     *      (no auth header needed, fastest path).
+     *   2. If that URL returns an HTML page (it has expired – pre-signed URLs
+     *      typically live ~1 h and large folder trees take longer to traverse),
+     *      fall back to the Graph API /content endpoint with a freshly-fetched
+     *      Bearer token.
      *
      * @param array<string, mixed> $item A child item as returned by listChildren().
      * @throws \RuntimeException on failure.
@@ -244,10 +251,25 @@ class MsGraphService {
         $expectedSize = (int)($item['size'] ?? -1);
 
         try {
+            $presignedOk = false;
             if (is_string($downloadUrl) && $downloadUrl !== '') {
-                // Pre-signed URL: no Authorization header required.
                 $response = $this->client()->get($downloadUrl, self::FORCE_IPV4 + ['sink' => $tmp, 'timeout' => 600]);
-            } else {
+                $this->honourSinkFallback($response, $tmp, $expectedSize);
+
+                if ($this->isHtmlContent($tmp)) {
+                    // Pre-signed URL returned an HTML error/login page (expired).
+                    // Wipe the temp file and fall through to the Graph API path.
+                    file_put_contents($tmp, '');
+                    $this->logger->debug(
+                        'Pre-signed download URL returned HTML for item "' . ($item['name'] ?? '') . '"; retrying via Graph API.',
+                        ['app' => 'neura_microsoft_sharepoint_sync']
+                    );
+                } else {
+                    $presignedOk = true;
+                }
+            }
+
+            if (!$presignedOk) {
                 $token = $this->getAccessToken();
                 $url = self::GRAPH_BASE . '/drives/' . rawurlencode($driveId) . '/items/' . rawurlencode((string)$item['id']) . '/content';
                 $response = $this->client()->get($url, self::FORCE_IPV4 + [
@@ -255,25 +277,46 @@ class MsGraphService {
                     'timeout' => 600,
                     'headers' => ['Authorization' => 'Bearer ' . $token],
                 ]);
-            }
-
-            // Fallback: if the "sink" option was not honoured, write the body ourselves.
-            if ($expectedSize > 0 && (int)@filesize($tmp) === 0) {
-                $body = $response->getBody();
-                if (is_resource($body)) {
-                    $dest = fopen($tmp, 'wb');
-                    if ($dest !== false) {
-                        stream_copy_to_stream($body, $dest);
-                        fclose($dest);
-                    }
-                } elseif (is_string($body) && $body !== '') {
-                    file_put_contents($tmp, $body);
-                }
+                $this->honourSinkFallback($response, $tmp, $expectedSize);
             }
         } catch (\Throwable $e) {
             throw new \RuntimeException($this->extractError($e), 0, $e);
         }
         return $tmp;
+    }
+
+    /**
+     * If the HTTP client did not honour the "sink" option (i.e. the file is
+     * still empty after the request), write the response body ourselves.
+     */
+    private function honourSinkFallback(mixed $response, string $tmp, int $expectedSize): void {
+        if ($expectedSize > 0 && (int)@filesize($tmp) === 0) {
+            $body = $response->getBody();
+            if (is_resource($body)) {
+                $dest = fopen($tmp, 'wb');
+                if ($dest !== false) {
+                    stream_copy_to_stream($body, $dest);
+                    fclose($dest);
+                }
+            } elseif (is_string($body) && $body !== '') {
+                file_put_contents($tmp, $body);
+            }
+        }
+    }
+
+    /**
+     * Returns true when the first bytes of a downloaded temp file look like an
+     * HTML page rather than binary file content. SharePoint redirects expired
+     * pre-signed URLs to a login/error HTML page.
+     */
+    private function isHtmlContent(string $path): bool {
+        $handle = @fopen($path, 'rb');
+        if ($handle === false) {
+            return false;
+        }
+        $start = (string)fread($handle, 20);
+        fclose($handle);
+        return stripos(ltrim($start), '<!DOCTYPE') === 0 || stripos(ltrim($start), '<html') === 0;
     }
 
     // ---------------------------------------------------------------------
