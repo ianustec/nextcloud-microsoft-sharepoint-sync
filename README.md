@@ -130,17 +130,21 @@ php /var/www/html/occ app:enable neura_microsoft_sharepoint_sync
 
 ### Deploy script (Kubernetes / Docker / bare-metal)
 
-A convenience `deploy.sh` is included:
+A convenience `deploy.sh` is included. It builds the vendor autoloader, packages
+the app, copies it into the target environment and runs `occ app:enable` automatically.
 
 ```bash
-# Kubernetes
-./deploy.sh k8s <namespace> <deployment>
+# Kubernetes — second arg is the Deployment name, not the pod name
+./deploy.sh k8s <namespace> <deployment-name>
+# e.g. ./deploy.sh k8s my-namespace nextcloud
 
-# Docker
+# Docker / Docker Compose — pass the container name
 ./deploy.sh docker <container-name>
+# e.g. ./deploy.sh docker nextcloud
 
-# Bare metal
-./deploy.sh local /var/www/html
+# Bare metal — pass the Nextcloud root (directory that contains occ)
+./deploy.sh local <nextcloud-root>
+# e.g. ./deploy.sh local /var/www/html
 ```
 
 ## Security notes
