@@ -18,7 +18,7 @@ Authenticate once with a single Microsoft account (Delegated OAuth) that already
 - Uses Nextcloud's built-in HTTP client — no external Composer dependencies
 
 Developed by [IANUSTEC](https://ianustec.com) as part of our open-source initiative to help companies migrate from Google and Microsoft to self-hosted infrastructure.]]></description>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
     <licence>AGPL-3.0-or-later</licence>
     <author mail="opensource@ianustec.com" homepage="https://ianustec.com">IANUSTEC</author>
     <documentation>
@@ -34,7 +34,7 @@ Developed by [IANUSTEC](https://ianustec.com) as part of our open-source initiat
         <php min-version="8.1"/>
         <lib>curl</lib>
         <lib>json</lib>
-        <nextcloud min-version="27" max-version="32"/>
+        <nextcloud min-version="27" max-version="33"/>
     </dependencies>
     <settings>
         <admin-section>OCA\NeuraMicrosoftSharepointSync\Settings\AdminSection</admin-section>
